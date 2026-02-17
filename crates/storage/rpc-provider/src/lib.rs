@@ -57,7 +57,9 @@ use reth_storage_api::{
     BlockBodyIndicesProvider, BlockReaderIdExt, BlockSource, DBProvider, NodePrimitivesProvider,
     ReceiptProviderIdExt, StatsReader,
 };
-use reth_trie::{updates::TrieUpdates, AccountProof, HashedPostState, MultiProof, TrieInput};
+use reth_trie::{
+    updates::TrieUpdates, AccountProof, HashedPostState, MultiProof, StorageTrieInput, TrieInput,
+};
 use std::{
     collections::BTreeMap,
     future::{Future, IntoFuture},
@@ -1253,20 +1255,28 @@ where
         Err(ProviderError::UnsupportedProvider)
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        _input: StorageTrieInput,
+        _address: Address,
+    ) -> Result<B256, ProviderError> {
+        Err(ProviderError::UnsupportedProvider)
+    }
+
     fn storage_proof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slot: B256,
-        _hashed_storage: reth_trie::HashedStorage,
     ) -> Result<reth_trie::StorageProof, ProviderError> {
         Err(ProviderError::UnsupportedProvider)
     }
 
     fn storage_multiproof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slots: &[B256],
-        _hashed_storage: reth_trie::HashedStorage,
     ) -> Result<reth_trie::StorageMultiProof, ProviderError> {
         Err(ProviderError::UnsupportedProvider)
     }
