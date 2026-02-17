@@ -12,7 +12,7 @@ use reth_storage_api::{
 use reth_storage_errors::provider::ProviderResult;
 use reth_trie::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, KeccakKeyHasher,
-    MultiProof, MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
+    MultiProof, MultiProofTargets, StorageMultiProof, StorageProof, StorageTrieInput, TrieInput,
 };
 
 /// Mock state for testing
@@ -104,20 +104,28 @@ impl StorageRootProvider for StateProviderTest {
         unimplemented!("storage root is not supported")
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        _input: StorageTrieInput,
+        _address: Address,
+    ) -> ProviderResult<B256> {
+        unimplemented!("storage root from nodes is not supported")
+    }
+
     fn storage_proof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slot: B256,
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageProof> {
         unimplemented!("proof generation is not supported")
     }
 
     fn storage_multiproof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slots: &[B256],
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
         unimplemented!("proof generation is not supported")
     }
