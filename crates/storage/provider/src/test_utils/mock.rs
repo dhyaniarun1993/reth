@@ -818,7 +818,7 @@ where
 
     fn storage_root_from_nodes(
         &self,
-        _input: TrieInput,
+        _input: StorageTrieInput,
         _address: Address,
     ) -> ProviderResult<B256> {
         Ok(EMPTY_ROOT_HASH)
