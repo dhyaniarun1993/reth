@@ -9,7 +9,7 @@ use reth_storage_api::{
 };
 use reth_trie::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
-    MultiProofTargets, StorageMultiProof, TrieInput,
+    MultiProofTargets, StorageMultiProof, StorageTrieInput, TrieInput,
 };
 use revm_database::BundleState;
 use std::{borrow::Cow, sync::OnceLock};
@@ -58,13 +58,6 @@ impl<'a, N: NodePrimitives> MemoryOverlayStateProviderRef<'a, N> {
             }
             input
         })
-    }
-
-    fn merged_hashed_storage(&self, address: Address, storage: HashedStorage) -> HashedStorage {
-        let state = &self.trie_input().state;
-        let mut hashed = state.storages.get(&keccak256(address)).cloned().unwrap_or_default();
-        hashed.extend(&storage);
-        hashed
     }
 }
 
@@ -148,32 +141,62 @@ impl<N: NodePrimitives> StateRootProvider for MemoryOverlayStateProviderRef<'_, 
 }
 
 impl<N: NodePrimitives> StorageRootProvider for MemoryOverlayStateProviderRef<'_, N> {
-    // TODO: Currently this does not reuse available in-memory trie nodes.
     fn storage_root(&self, address: Address, storage: HashedStorage) -> ProviderResult<B256> {
-        let merged = self.merged_hashed_storage(address, storage);
-        self.historical.storage_root(address, merged)
+        self.historical.storage_root(address, storage)
     }
 
-    // TODO: Currently this does not reuse available in-memory trie nodes.
+    /// Returns the storage root, reusing in-memory trie nodes when available.
+    ///
+    /// This merges in-memory trie nodes with the provided `StorageTrieInput`, then uses the proper
+    /// `storage_root_from_nodes` API to compute the storage root efficiently by reusing
+    /// cached trie nodes.
+    fn storage_root_from_nodes(
+        &self,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> ProviderResult<B256> {
+        let hashed_address = keccak256(address);
+        // Convert to TrieInput, merge with in-memory data, then convert back
+        let mut trie_input = input.into_trie_input(hashed_address);
+        trie_input.prepend_self(self.trie_input().clone());
+        let merged_input = StorageTrieInput::from_trie_input(trie_input, hashed_address);
+        self.historical.storage_root_from_nodes(merged_input, address)
+    }
+
+    /// Returns the storage proof, reusing in-memory trie nodes when available.
+    ///
+    /// This merges in-memory trie nodes with the provided `StorageTrieInput` for efficient proof
+    /// generation by reusing cached trie nodes.
     fn storage_proof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slot: B256,
-        storage: HashedStorage,
     ) -> ProviderResult<reth_trie::StorageProof> {
-        let merged = self.merged_hashed_storage(address, storage);
-        self.historical.storage_proof(address, slot, merged)
+        let hashed_address = keccak256(address);
+        // Convert to TrieInput, merge with in-memory data, then convert back
+        let mut trie_input = input.into_trie_input(hashed_address);
+        trie_input.prepend_self(self.trie_input().clone());
+        let merged_input = StorageTrieInput::from_trie_input(trie_input, hashed_address);
+        self.historical.storage_proof(merged_input, address, slot)
     }
 
-    // TODO: Currently this does not reuse available in-memory trie nodes.
+    /// Returns the storage multiproof, reusing in-memory trie nodes when available.
+    ///
+    /// This merges in-memory trie nodes with the provided `StorageTrieInput` to efficiently
+    /// generate proofs for multiple storage slots by reusing cached trie nodes.
     fn storage_multiproof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slots: &[B256],
-        storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
-        let merged = self.merged_hashed_storage(address, storage);
-        self.historical.storage_multiproof(address, slots, merged)
+        let hashed_address = keccak256(address);
+        // Convert to TrieInput, merge with in-memory data, then convert back
+        let mut trie_input = input.into_trie_input(hashed_address);
+        trie_input.prepend_self(self.trie_input().clone());
+        let merged_input = StorageTrieInput::from_trie_input(trie_input, hashed_address);
+        self.historical.storage_multiproof(merged_input, address, slots)
     }
 }
 

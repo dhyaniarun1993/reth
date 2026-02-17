@@ -1,7 +1,7 @@
 use crate::{
-    prefix_set::TriePrefixSetsMut,
+    prefix_set::{PrefixSetMut, TriePrefixSetsMut},
     updates::{TrieUpdates, TrieUpdatesSorted},
-    HashedPostState, HashedPostStateSorted,
+    HashedPostState, HashedPostStateSorted, HashedStorage,
 };
 use alloc::sync::Arc;
 
@@ -133,6 +133,60 @@ impl TrieInput {
     pub fn cleared(mut self) -> Self {
         self.clear();
         self
+    }
+}
+
+/// Inputs for storage trie computations on a single account.
+///
+/// Unlike [`TrieInput`] which contains full state information for all accounts,
+/// this type is specialized for storage operations on a single address and only
+/// contains the necessary data for that specific storage trie.
+#[derive(Default, Debug, Clone)]
+pub struct StorageTrieInput {
+    /// The collection of cached in-memory intermediate trie nodes that
+    /// can be reused for computation.
+    pub nodes: TrieUpdates,
+    /// The storage state for a single address.
+    pub storage: HashedStorage,
+    /// The prefix set for this specific storage trie.
+    pub prefix_set: PrefixSetMut,
+}
+
+impl StorageTrieInput {
+    /// Create new storage trie input.
+    pub const fn new(nodes: TrieUpdates, storage: HashedStorage, prefix_set: PrefixSetMut) -> Self {
+        Self { nodes, storage, prefix_set }
+    }
+
+    /// Create new storage trie input from storage state. The prefix set will be constructed
+    /// automatically.
+    pub fn from_storage(storage: HashedStorage) -> Self {
+        let prefix_set = storage.construct_prefix_set();
+        Self { nodes: TrieUpdates::default(), storage, prefix_set }
+    }
+
+    /// Extract storage trie input for a specific address from a full [`TrieInput`].
+    ///
+    /// This extracts only the relevant data for the given address's storage trie,
+    /// including the trie nodes, storage state, and prefix set.
+    pub fn from_trie_input(input: TrieInput, hashed_address: alloy_primitives::B256) -> Self {
+        let storage = input.state.storages.get(&hashed_address).cloned().unwrap_or_default();
+        let prefix_set =
+            input.prefix_sets.storage_prefix_sets.get(&hashed_address).cloned().unwrap_or_default();
+        Self { nodes: input.nodes, storage, prefix_set }
+    }
+
+    /// Convert this storage trie input back to a full [`TrieInput`] for a specific address.
+    ///
+    /// This is useful when you need to merge storage trie data with other trie data.
+    pub fn into_trie_input(self, hashed_address: alloy_primitives::B256) -> TrieInput {
+        let mut prefix_sets = TriePrefixSetsMut::default();
+        prefix_sets.storage_prefix_sets.insert(hashed_address, self.prefix_set);
+
+        let mut state = HashedPostState::default();
+        state.storages.insert(hashed_address, self.storage);
+
+        TrieInput { nodes: self.nodes, state, prefix_sets }
     }
 }
 

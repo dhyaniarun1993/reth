@@ -1017,7 +1017,7 @@ mod tests {
     };
     use reth_trie::{
         updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
-        MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
+        MultiProofTargets, StorageMultiProof, StorageProof, StorageTrieInput, TrieInput,
     };
 
     fn create_mock_state(
@@ -1136,20 +1136,28 @@ mod tests {
             Ok(B256::random())
         }
 
+        fn storage_root_from_nodes(
+            &self,
+            _input: StorageTrieInput,
+            _address: Address,
+        ) -> ProviderResult<B256> {
+            Ok(B256::random())
+        }
+
         fn storage_proof(
             &self,
+            _input: StorageTrieInput,
             _address: Address,
             slot: B256,
-            _hashed_storage: HashedStorage,
         ) -> ProviderResult<StorageProof> {
             Ok(StorageProof::new(slot))
         }
 
         fn storage_multiproof(
             &self,
+            _input: StorageTrieInput,
             _address: Address,
             _slots: &[B256],
-            _hashed_storage: HashedStorage,
         ) -> ProviderResult<StorageMultiProof> {
             Ok(StorageMultiProof::empty())
         }

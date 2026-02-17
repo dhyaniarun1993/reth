@@ -40,7 +40,7 @@ use reth_storage_api::{
 use reth_storage_errors::provider::{ConsistentViewError, ProviderError, ProviderResult};
 use reth_trie::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
-    MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
+    MultiProofTargets, StorageMultiProof, StorageProof, StorageTrieInput, TrieInput,
 };
 use std::{
     collections::BTreeMap,
@@ -816,20 +816,28 @@ where
         Ok(EMPTY_ROOT_HASH)
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        _input: TrieInput,
+        _address: Address,
+    ) -> ProviderResult<B256> {
+        Ok(EMPTY_ROOT_HASH)
+    }
+
     fn storage_proof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         slot: B256,
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<reth_trie::StorageProof> {
         Ok(StorageProof::new(slot))
     }
 
     fn storage_multiproof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slots: &[B256],
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
         Ok(StorageMultiProof::empty())
     }

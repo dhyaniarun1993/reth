@@ -5,7 +5,8 @@ use reth_execution_errors::StorageRootError;
 use reth_storage_api::{BlockNumReader, StorageChangeSetReader};
 use reth_storage_errors::provider::ProviderResult;
 use reth_trie::{
-    hashed_cursor::HashedPostStateCursorFactory, HashedPostState, HashedStorage, StorageRoot,
+    hashed_cursor::HashedPostStateCursorFactory, trie_cursor::InMemoryTrieCursorFactory,
+    HashedPostState, HashedStorage, StorageRoot, StorageTrieInput,
 };
 
 #[cfg(feature = "metrics")]
@@ -24,6 +25,14 @@ pub trait DatabaseStorageRoot<'a, TX> {
         tx: &'a TX,
         address: Address,
         hashed_storage: HashedStorage,
+    ) -> Result<B256, StorageRootError>;
+
+    /// Calculates the storage root from the provided [`StorageTrieInput`], reusing intermediate
+    /// trie nodes to speed up computation.
+    fn overlay_root_from_nodes(
+        tx: &'a TX,
+        input: StorageTrieInput,
+        address: Address,
     ) -> Result<B256, StorageRootError>;
 }
 
@@ -94,6 +103,28 @@ impl<'a, TX: DbTx> DatabaseStorageRoot<'a, TX>
             DatabaseTrieCursorFactory::new(tx),
             HashedPostStateCursorFactory::new(DatabaseHashedCursorFactory::new(tx), &state_sorted),
             address,
+            prefix_set,
+            #[cfg(feature = "metrics")]
+            TrieRootMetrics::new(reth_trie::TrieType::Storage),
+        )
+        .root()
+    }
+
+    fn overlay_root_from_nodes(
+        tx: &'a TX,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> Result<B256, StorageRootError> {
+        let hashed_address = keccak256(address);
+        let nodes_sorted = input.nodes.into_sorted();
+        let state_sorted =
+            HashedPostState::from_hashed_storage(hashed_address, input.storage).into_sorted();
+        let prefix_set = input.prefix_set.freeze();
+
+        StorageRoot::new_hashed(
+            InMemoryTrieCursorFactory::new(DatabaseTrieCursorFactory::new(tx), &nodes_sorted),
+            HashedPostStateCursorFactory::new(DatabaseHashedCursorFactory::new(tx), &state_sorted),
+            hashed_address,
             prefix_set,
             #[cfg(feature = "metrics")]
             TrieRootMetrics::new(reth_trie::TrieType::Storage),

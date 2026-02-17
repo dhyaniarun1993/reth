@@ -36,7 +36,7 @@ use reth_stages_types::{StageCheckpoint, StageId};
 use reth_storage_errors::provider::{ProviderError, ProviderResult};
 use reth_trie_common::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
-    MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
+    MultiProofTargets, StorageMultiProof, StorageProof, StorageTrieInput, TrieInput,
 };
 
 /// Supports various api interfaces for testing purposes.
@@ -471,20 +471,28 @@ impl<C: Send + Sync, N: NodePrimitives> StorageRootProvider for NoopProvider<C, 
         Ok(B256::default())
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        _input: StorageTrieInput,
+        _address: Address,
+    ) -> ProviderResult<B256> {
+        Ok(B256::default())
+    }
+
     fn storage_proof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         slot: B256,
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageProof> {
         Ok(StorageProof::new(slot))
     }
 
     fn storage_multiproof(
         &self,
+        _input: StorageTrieInput,
         _address: Address,
         _slots: &[B256],
-        _hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
         Ok(StorageMultiProof::empty())
     }

@@ -13,7 +13,7 @@ use reth_trie::{
     updates::TrieUpdates,
     witness::TrieWitness,
     AccountProof, HashedPostState, HashedStorage, KeccakKeyHasher, MultiProof, MultiProofTargets,
-    StateRoot, StorageMultiProof, StorageRoot, TrieInput, TrieInputSorted,
+    StateRoot, StorageMultiProof, StorageRoot, StorageTrieInput, TrieInput, TrieInputSorted,
 };
 use reth_trie_db::{
     DatabaseProof, DatabaseStateRoot, DatabaseStorageProof, DatabaseStorageRoot,
@@ -117,23 +117,32 @@ impl<Provider: DBProvider> StorageRootProvider for LatestStateProviderRef<'_, Pr
             .map_err(|err| ProviderError::Database(err.into()))
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> ProviderResult<B256> {
+        StorageRoot::overlay_root_from_nodes(self.tx(), input, address)
+            .map_err(|err| ProviderError::Database(err.into()))
+    }
+
     fn storage_proof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slot: B256,
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<reth_trie::StorageProof> {
-        StorageProof::overlay_storage_proof(self.tx(), address, slot, hashed_storage)
+        StorageProof::overlay_storage_proof(self.tx(), input, address, slot)
             .map_err(ProviderError::from)
     }
 
     fn storage_multiproof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slots: &[B256],
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
-        StorageProof::overlay_storage_multiproof(self.tx(), address, slots, hashed_storage)
+        StorageProof::overlay_storage_multiproof(self.tx(), input, address, slots)
             .map_err(ProviderError::from)
     }
 }
