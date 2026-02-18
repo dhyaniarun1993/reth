@@ -59,6 +59,13 @@ impl<'a, N: NodePrimitives> MemoryOverlayStateProviderRef<'a, N> {
             input
         })
     }
+
+    fn merged_hashed_storage(&self, address: Address, storage: HashedStorage) -> HashedStorage {
+        let state = &self.trie_input().state;
+        let mut hashed = state.storages.get(&keccak256(address)).cloned().unwrap_or_default();
+        hashed.extend(&storage);
+        hashed
+    }
 }
 
 impl<N: NodePrimitives> BlockHashReader for MemoryOverlayStateProviderRef<'_, N> {
@@ -142,7 +149,8 @@ impl<N: NodePrimitives> StateRootProvider for MemoryOverlayStateProviderRef<'_, 
 
 impl<N: NodePrimitives> StorageRootProvider for MemoryOverlayStateProviderRef<'_, N> {
     fn storage_root(&self, address: Address, storage: HashedStorage) -> ProviderResult<B256> {
-        self.historical.storage_root(address, storage)
+        let merged = self.merged_hashed_storage(address, storage);
+        self.historical.storage_root(address, merged)
     }
 
     /// Returns the storage root, reusing in-memory trie nodes when available.
