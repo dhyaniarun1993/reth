@@ -6,7 +6,7 @@ use alloy_primitives::{Address, B256, U256};
 use reth_errors::ProviderResult;
 use reth_revm::database::StateProviderDatabase;
 use reth_storage_api::{BytecodeReader, HashedPostStateProvider, StateProvider, StateProviderBox};
-use reth_trie::{HashedStorage, MultiProofTargets};
+use reth_trie::{HashedStorage, MultiProofTargets, StorageTrieInput};
 use revm::database::{BundleState, State};
 
 /// Helper alias type for the state's [`State`]
@@ -60,22 +60,30 @@ impl reth_storage_api::StorageRootProvider for StateProviderTraitObjWrapper {
         self.0.storage_root(address, hashed_storage)
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> ProviderResult<B256> {
+        self.0.storage_root_from_nodes(input, address)
+    }
+
     fn storage_proof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slot: B256,
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<reth_trie::StorageProof> {
-        self.0.storage_proof(address, slot, hashed_storage)
+        self.0.storage_proof(input, address, slot)
     }
 
     fn storage_multiproof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slots: &[B256],
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<reth_trie::StorageMultiProof> {
-        self.0.storage_multiproof(address, slots, hashed_storage)
+        self.0.storage_multiproof(input, address, slots)
     }
 }
 

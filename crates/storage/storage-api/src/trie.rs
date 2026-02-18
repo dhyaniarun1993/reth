@@ -4,7 +4,7 @@ use reth_storage_errors::provider::ProviderResult;
 use reth_trie_common::{
     updates::{StorageTrieUpdatesSorted, TrieUpdates, TrieUpdatesSorted},
     AccountProof, HashedPostState, HashedStorage, MultiProof, MultiProofTargets, StorageMultiProof,
-    StorageProof, TrieInput,
+    StorageProof, StorageTrieInput, TrieInput,
 };
 
 /// A type that can compute the state root of a given post state.
@@ -47,21 +47,33 @@ pub trait StorageRootProvider {
     fn storage_root(&self, address: Address, hashed_storage: HashedStorage)
         -> ProviderResult<B256>;
 
-    /// Returns the storage proof of the `HashedStorage` for target slot on top of the current
-    /// state.
+    /// Returns the storage root for target address on top of the current state, reusing
+    /// intermediate trie nodes from the provided `StorageTrieInput`.
+    ///
+    /// This method is more efficient than [`Self::storage_root`] when trie nodes are already
+    /// available, as it avoids redundant trie recomputation. Unlike the state-level root methods
+    /// which use [`TrieInput`], this method uses [`StorageTrieInput`] which contains only the
+    /// data needed for a single account's storage trie.
+    fn storage_root_from_nodes(
+        &self,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> ProviderResult<B256>;
+
+    /// Returns the storage proof for target slot.
     fn storage_proof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slot: B256,
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageProof>;
 
     /// Returns the storage multiproof for target slots.
     fn storage_multiproof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slots: &[B256],
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof>;
 }
 

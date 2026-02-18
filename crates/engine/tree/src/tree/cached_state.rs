@@ -16,7 +16,7 @@ use reth_provider::{
 use reth_revm::db::BundleState;
 use reth_trie::{
     updates::TrieUpdates, AccountProof, HashedPostState, HashedStorage, MultiProof,
-    MultiProofTargets, StorageMultiProof, StorageProof, TrieInput,
+    MultiProofTargets, StorageMultiProof, StorageProof, StorageTrieInput, TrieInput,
 };
 use revm_primitives::eip7907::MAX_CODE_SIZE;
 use std::{
@@ -445,22 +445,30 @@ impl<S: StorageRootProvider, const PREWARM: bool> StorageRootProvider
         self.state_provider.storage_root(address, hashed_storage)
     }
 
+    fn storage_root_from_nodes(
+        &self,
+        input: StorageTrieInput,
+        address: Address,
+    ) -> ProviderResult<B256> {
+        self.state_provider.storage_root_from_nodes(input, address)
+    }
+
     fn storage_proof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slot: B256,
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageProof> {
-        self.state_provider.storage_proof(address, slot, hashed_storage)
+        self.state_provider.storage_proof(input, address, slot)
     }
 
     fn storage_multiproof(
         &self,
+        input: StorageTrieInput,
         address: Address,
         slots: &[B256],
-        hashed_storage: HashedStorage,
     ) -> ProviderResult<StorageMultiProof> {
-        self.state_provider.storage_multiproof(address, slots, hashed_storage)
+        self.state_provider.storage_multiproof(input, address, slots)
     }
 }
 
