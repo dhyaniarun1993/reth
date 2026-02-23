@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub mod init;
 pub mod prune;
 pub mod unwind;
+pub mod verify;
 
 /// `op-reth op-proofs` command
 #[derive(Debug, Parser)]
@@ -27,6 +28,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> Command<C> {
             Subcommands::Init(cmd) => cmd.execute::<N>().await,
             Subcommands::Prune(cmd) => cmd.execute::<N>().await,
             Subcommands::Unwind(cmd) => cmd.execute::<N>().await,
+            Subcommands::Verify(cmd) => cmd.execute::<N>().await,
         }
     }
 }
@@ -38,6 +40,7 @@ impl<C: ChainSpecParser> Command<C> {
             Subcommands::Init(cmd) => cmd.chain_spec(),
             Subcommands::Prune(cmd) => cmd.chain_spec(),
             Subcommands::Unwind(cmd) => cmd.chain_spec(),
+            Subcommands::Verify(cmd) => cmd.chain_spec(),
         }
     }
 }
@@ -54,4 +57,7 @@ pub enum Subcommands<C: ChainSpecParser> {
     /// Unwind the proofs storage to a specific block
     #[command(name = "unwind")]
     Unwind(unwind::UnwindCommand<C>),
+    /// Verify the proofs storage against the canonical chain state
+    #[command(name = "verify")]
+    Verify(verify::VerifyCommand<C>),
 }
