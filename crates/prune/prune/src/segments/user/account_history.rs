@@ -68,7 +68,15 @@ where
             Some(range) => range,
             None => {
                 trace!(target: "pruner", "No account history to prune");
-                return Ok(SegmentOutput::done())
+                // Return done with checkpoint set to target block to prevent infinite loops
+                return Ok(SegmentOutput {
+                    progress: PruneProgress::Finished,
+                    pruned: 0,
+                    checkpoint: Some(SegmentOutputCheckpoint {
+                        block_number: Some(input.to_block),
+                        tx_number: None,
+                    }),
+                })
             }
         };
         let range_end = *range.end();
