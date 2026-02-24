@@ -15,7 +15,9 @@ use reth_provider::{
     NodePrimitivesProvider, PruneCheckpointWriter, StaticFileProviderFactory, StorageSettingsCache,
     TransactionsProvider,
 };
-use reth_prune_types::{PruneCheckpoint, PruneSegment, SegmentOutput, SegmentOutputCheckpoint};
+use reth_prune_types::{
+    PruneCheckpoint, PruneProgress, PruneSegment, SegmentOutput, SegmentOutputCheckpoint,
+};
 use reth_static_file_types::StaticFileSegment;
 use tracing::{debug, trace};
 

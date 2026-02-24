@@ -14,7 +14,7 @@ use reth_db_api::{
 };
 use reth_provider::{DBProvider, EitherWriter, RocksDBProviderFactory, StaticFileProviderFactory};
 use reth_prune_types::{
-    PruneMode, PrunePurpose, PruneSegment, SegmentOutput, SegmentOutputCheckpoint,
+    PruneMode, PruneProgress, PrunePurpose, PruneSegment, SegmentOutput, SegmentOutputCheckpoint,
 };
 use reth_static_file_types::StaticFileSegment;
 use reth_storage_api::{StorageChangeSetReader, StorageSettingsCache};
