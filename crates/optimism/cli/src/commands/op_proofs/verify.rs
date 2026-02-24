@@ -157,7 +157,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> VerifyCommand<C> {
         info!(target: "reth::cli", "Comparing account trie nodes...");
 
         // Get canonical database provider
-        let canonical_db = canonical_provider.database_provider_ro()?;
+        let canonical_db = canonical_provider.database_provider_ro()?.disable_long_read_transaction_safety();
         let canonical_tx = canonical_db.into_tx();
 
         // Create cursor factory and get account trie cursor
@@ -317,7 +317,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> VerifyCommand<C> {
         info!(target: "reth::cli", "Comparing hashed account values...");
 
         // Get canonical database provider
-        let canonical_db = canonical_provider.database_provider_ro()?;
+        let canonical_db = canonical_provider.database_provider_ro()?.disable_long_read_transaction_safety();
         let canonical_tx = canonical_db.into_tx();
 
         // Create cursor factory and get hashed account cursor
@@ -548,7 +548,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> VerifyCommand<C> {
         }
 
         // Get canonical database provider
-        let canonical_db = canonical_provider.database_provider_ro()?;
+        let canonical_db = canonical_provider.database_provider_ro()?.disable_long_read_transaction_safety();
         let canonical_tx = canonical_db.into_tx();
 
         // Create cursor factory and get storage trie cursor
@@ -719,7 +719,7 @@ impl<C: ChainSpecParser<ChainSpec = OpChainSpec>> VerifyCommand<C> {
         }
 
         // Get canonical database provider
-        let canonical_db = canonical_provider.database_provider_ro()?;
+        let canonical_db = canonical_provider.database_provider_ro()?.disable_long_read_transaction_safety();
         let canonical_tx = canonical_db.into_tx();
 
         // Create cursor factory and get hashed storage cursor
