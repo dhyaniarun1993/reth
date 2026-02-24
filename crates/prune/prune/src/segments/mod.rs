@@ -86,7 +86,15 @@ where
     let deleted_headers = provider.static_file_provider().delete_segment(segment)?;
 
     if deleted_headers.is_empty() {
-        return Ok(SegmentOutput::done())
+        // Return done with checkpoint set to target block to prevent infinite loops
+        return Ok(SegmentOutput {
+            progress: PruneProgress::Finished,
+            pruned: 0,
+            checkpoint: Some(SegmentOutputCheckpoint {
+                block_number: Some(input.to_block),
+                tx_number: input.previous_checkpoint.and_then(|checkpoint| checkpoint.tx_number),
+            }),
+        })
     }
 
     let tx_ranges = deleted_headers.iter().filter_map(|header| header.tx_range());

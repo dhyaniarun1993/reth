@@ -89,7 +89,17 @@ where
             Some(range) => range,
             None => {
                 trace!(target: "pruner", "No transaction lookup entries to prune");
-                return Ok(SegmentOutput::done())
+                // Return done with checkpoint set to target block to prevent infinite loops
+                return Ok(SegmentOutput {
+                    progress: PruneProgress::Finished,
+                    pruned: 0,
+                    checkpoint: Some(SegmentOutputCheckpoint {
+                        block_number: Some(input.to_block),
+                        tx_number: input
+                            .previous_checkpoint
+                            .and_then(|checkpoint| checkpoint.tx_number),
+                    }),
+                })
             }
         }
         .into_inner();
